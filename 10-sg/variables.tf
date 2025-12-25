@@ -11,7 +11,7 @@ variable "sg_name" {
     # "frontend",
     # "backend_alb",
   # "catalogue", "user", "cart", "shipping", "payment"
-  eks_control_plane,
-  eks_node
+  "eks_control_plane",
+  "eks_node"
   ]
 }
