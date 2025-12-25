@@ -10,42 +10,53 @@ module "eks" {
   kubernetes_version = "1.33"
 
   addons = {
-    coredns                = {}
+    coredns = {}
     eks-pod-identity-agent = {
       before_compute = true
     }
-    kube-proxy             = {}
-    vpc-cni                = {
+    kube-proxy = {}
+    vpc-cni = {
       before_compute = true
     }
     metrics-server = {}
   }
 
   # Optional
-  endpoint_public_access = true
+  endpoint_public_access = false
 
   # Optional: Adds the current caller identity as an administrator via cluster access entry
   enable_cluster_creator_admin_permissions = true
 
-  vpc_id                   = "vpc-1234556abcdef"
-  subnet_ids               = ["subnet-abcde012", "subnet-bcde012a", "subnet-fghi345a"]
-  control_plane_subnet_ids = ["subnet-xyzde987", "subnet-slkjf456", "subnet-qeiru789"]
+  vpc_id                   = local.vpc_id
+  subnet_ids               = local.private_subnets_array
+  control_plane_subnet_ids = local.private_subnets_array
+  create_security_group = false
+  create_node_security_group = false
+  node_security_group_id = local.eks_node_sg_id
+  security_group_id = local.eks_control_plane_sg_id
 
   # EKS Managed Node Group(s)
   eks_managed_node_groups = {
-    example = {
+    blue = {
       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
       ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = ["m5.xlarge"]
-
+      iam_role_additional_policies={
+        amazonEBS= "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+        amazonEFS = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+      }
+#cluster node autoscaling
       min_size     = 2
       max_size     = 10
       desired_size = 2
     }
   }
 
-  tags = {
-    Environment = "dev"
-    Terraform   = "true"
-  }
+  tags = merge(
+
+    local.common_tags,
+    {
+      Name = "${local.common_name_suffix}-EKS-resource"
+    }
+  )
 }
