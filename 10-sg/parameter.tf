@@ -3,4 +3,5 @@ resource "aws_ssm_parameter" "sg_ids" {
   name  = "/${var.project}/${var.environment}/${var.sg_name[count.index]}_sg-id"
   type  = "String"
   value = module.sg[count.index].sg_id
+  overwrite = true
 }
