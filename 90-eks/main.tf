@@ -7,7 +7,7 @@ module "eks" {
 
 
   name               = local.common_name_suffix
-  kubernetes_version = "1.32"
+  kubernetes_version = "1.29"
 
   # access_entries = {
   #   terraform-admin = {
@@ -54,16 +54,17 @@ module "eks" {
     blue = {
       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
       ami_type       = "AL2023_x86_64_STANDARD"
-      instance_types = ["t3.micro"]
+      instance_types = ["m7i-flex.large"] 
+      # instance_types = ["t3.micro"]  - addons are not installed 
       # instance_types = ["m5.xlarge"]
       iam_role_additional_policies={
         amazonEBS= "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
         amazonEFS = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
       }
 #cluster node autoscaling
-      min_size     = 1
+      min_size     = 2
       max_size     = 10
-      desired_size = 1
+      desired_size = 2
     }
   }
 
