@@ -6,8 +6,9 @@ module "eks" {
   #https://github.com/terraform-aws-modules/terraform-aws-eks?tab=readme-ov-file#eks-managed-node-group
 
 
-  name               = local.common_name_suffix
-  kubernetes_version = "1.30"
+  name = local.common_name_suffix
+  # kubernetes_version = "1.30"
+  kubernetes_version = var.eks_version
 
   # access_entries = {
   #   terraform-admin = {
@@ -41,54 +42,64 @@ module "eks" {
   # Optional: Adds the current caller identity as an administrator via cluster access entry
   enable_cluster_creator_admin_permissions = true
 
-  vpc_id                   = local.vpc_id
-  subnet_ids               = local.private_subnets_array
-  control_plane_subnet_ids = local.private_subnets_array
-  create_security_group = false
+  vpc_id                     = local.vpc_id
+  subnet_ids                 = local.private_subnets_array
+  control_plane_subnet_ids   = local.private_subnets_array
+  create_security_group      = false
   create_node_security_group = false
-  node_security_group_id = local.eks_node_sg_id
-  security_group_id = local.eks_control_plane_sg_id
+  node_security_group_id     = local.eks_node_sg_id
+  security_group_id          = local.eks_control_plane_sg_id
 
   # EKS Managed Node Group(s)
   eks_managed_node_groups = {
-#     blue = {
-#       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
-#       ami_type       = "AL2023_x86_64_STANDARD"
-#       instance_types = ["m7i-flex.large"] 
-#       # instance_types = ["t3.micro"]  - addons are not installed 
-#       # instance_types = ["m5.xlarge"]
-#       iam_role_additional_policies={
-#         amazonEBS= "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-#         amazonEFS = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
-#       }
-# #cluster node autoscaling
-#       min_size     = 2
-#       max_size     = 10
-#       desired_size = 2
-#     }
-
-    #green
-
-        green = {
+    blue = {
+      create = var.enable_blue
       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
-      ami_type       = "AL2023_x86_64_STANDARD"
-      instance_types = ["m7i-flex.large"] 
-
-      iam_role_additional_policies={
-        amazonEBS= "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      ami_type           = "AL2023_x86_64_STANDARD"
+      kubernetes_version = var.eks_nodegroup_blue_version
+      instance_types     = ["m7i-flex.large"]
+      # instance_types = ["t3.micro"]  - addons are not installed 
+      # instance_types = ["m5.xlarge"] -not free tier
+      iam_role_additional_policies = {
+        amazonEBS = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
         amazonEFS = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
       }
-#cluster node autoscaling
+      #cluster node autoscaling
       min_size     = 2
       max_size     = 10
       desired_size = 2
 
+      labels = {
+        nodegroup = "blue"
+      }
+    }
 
-    # taints = optional(map(object({
-    #   key    = string
-    #   value  = optional(string)
-    #   effect = string
-    # })))
+    #green
+
+    green = {
+      create = var.enable_green
+      # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
+      ami_type           = "AL2023_x86_64_STANDARD"
+      kubernetes_version = var.eks_nodegroup_green_version
+      instance_types     = ["m7i-flex.large"]
+
+      iam_role_additional_policies = {
+        amazonEBS = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+        amazonEFS = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+      }
+      #cluster node autoscaling
+      min_size     = 2
+      max_size     = 10
+      desired_size = 2
+
+      labels = {
+        nodegroup = "green"
+      }
+      # taints = optional(map(object({
+      #   key    = string
+      #   value  = optional(string)
+      #   effect = string
+      # })))
       # taints = {
       #   upgrade = {
       #     key = "upgrade"
