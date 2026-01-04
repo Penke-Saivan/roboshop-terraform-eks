@@ -1,0 +1,91 @@
+pipeline {
+    agent {
+        node {
+            label 'AGENT-1'
+        }
+    }
+
+    environment {
+        COURSE = 'Jenkin'
+    }
+
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        ansiColor('xterm')
+    }
+    stages {
+        stage('init-section') {
+            steps {
+                script {
+                    withAWS(region:'us-east-1', credentials: 'aws-creds'){
+                    sh '''
+                    cd 80-frontend-alb/
+                    echo "present in init"
+                    terraform init
+
+                       '''
+                    }
+                }
+            }
+        }
+        stage('plan-section') {
+            steps {
+                script {
+                    withAWS(region:'us-east-1', credentials: 'aws-creds'){
+
+                    sh '''
+                    echo "present in plan"
+                    cd 80-frontend-alb/
+                    terraform plan
+
+                       '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+
+
+            steps {
+                script {
+                    withAWS(region:'us-east-1', credentials: 'aws-creds'){
+                    sh '''
+                        cd 80-frontend-alb/
+                        terraform apply -auto-approve
+
+                       '''
+                    }
+                }
+            }
+        }
+        //         stage('Trigger Downstrwam-Job-SG') {
+        //     steps {
+        //         script {
+        //             build job: '10-sg',
+        //             wait: false //It does not need to wait for the completion of VPC
+        //             propagate: false // when thereis failure in d/s it should not affect u/s
+        //         }
+        //     }
+        // }
+    }
+
+        // --------------------------post build--------------------
+        post {
+        always {
+            echo 'I will always say Hello again!'
+            cleanWs()
+        }
+        success {
+            echo 'Success---------------'
+        }
+        failure {
+            echo 'failure---------------'
+        }
+        aborted {
+            echo 'someone -aborted--------------------------------'
+            echo 'may be timeeout  -aborted--------------------------------'
+        }
+        }
+}

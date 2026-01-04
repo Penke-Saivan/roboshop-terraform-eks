@@ -18,8 +18,8 @@ pipeline {
         stage('init-section') {
             steps {
                 script {
-                    withAWS(region:'us-east-1', credentials: 'aws-creds'){
-                    sh '''
+                    withAWS(region:'us-east-1', credentials: 'aws-creds') {
+                        sh '''
                     cd 10-sg/
                     echo "present in inti"
                     terraform init
@@ -32,9 +32,8 @@ pipeline {
         stage('plan-section') {
             steps {
                 script {
-                    withAWS(region:'us-east-1', credentials: 'aws-creds'){
-
-                    sh '''
+                    withAWS(region:'us-east-1', credentials: 'aws-creds') {
+                        sh '''
                     echo "present in plan"
                     cd 10-sg/
                     terraform plan
@@ -57,8 +56,8 @@ pipeline {
 
             steps {
                 script {
-                    withAWS(region:'us-east-1', credentials: 'aws-creds'){
-                    sh '''
+                    withAWS(region:'us-east-1', credentials: 'aws-creds') {
+                        sh '''
                         cd 10-sg/
                         terraform apply -auto-approve
 
@@ -66,6 +65,64 @@ pipeline {
                     }
                 }
             }
+        }
+        stage('Parallel Trigger') {
+            parallel {
+                stage('Bastion') {
+                    steps {
+                        script {
+                            build job: '20-bastion',
+                             wait: false //It does not need to wait for the completion of VPC
+                            propagate: false // when thereis failure in d/s it should not affect u/s
+                        }
+                    }
+                }
+                stage('SG-RULES') {
+                    steps {
+                        script {
+                            build job: '30-sg-rules',
+                             wait: false //It does not need to wait for the completion of VPC
+                            propagate: false // when thereis failure in d/s it should not affect u/s
+                        }
+                    }
+                }
+                stage('ECR-REPO') {
+                    steps {
+                        script {
+                            build job: '40-ecr',
+                             wait: false //It does not need to wait for the completion of VPC
+                            propagate: false // when thereis failure in d/s it should not affect u/s
+                        }
+                    }
+                }
+                stage('ACM') {
+                    steps {
+                        script {
+                            build job: '70-acm',
+                             wait: false //It does not need to wait for the completion of VPC
+                            propagate: false // when thereis failure in d/s it should not affect u/s
+                        }
+                    }
+                }
+                stage('EKS') {
+                    steps {
+                        script {
+                            build job: '90-eks',
+                             wait: false //It does not need to wait for the completion of VPC
+                            propagate: false // when thereis failure in d/s it should not affect u/s
+                        }
+                    }
+                }
+            }
+        }
+        stage('ALB') {
+                    steps {
+                        script {
+                            build job: '80-frontend-alb',
+                            wait: false //It does not need to wait for the completion of VPC
+                            propagate: false // when thereis failure in d/s it should not affect u/s
+                        }
+                    }
         }
     }
 
