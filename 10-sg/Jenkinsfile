@@ -20,8 +20,8 @@ pipeline {
                 script {
                     withAWS(region:'us-east-1', credentials: 'aws-creds'){
                     sh '''
-                    cd 00-vpc/
-                    echo "present in iniiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiittttt"
+                    cd 10-sg/
+                    echo "present in inti"
                     terraform init
 
                        '''
@@ -35,8 +35,8 @@ pipeline {
                     withAWS(region:'us-east-1', credentials: 'aws-creds'){
 
                     sh '''
-                    echo "present in plaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannnnnnnn"
-                    cd 00-vpc/
+                    echo "present in plan"
+                    cd 10-sg/
                     terraform plan
 
                        '''
@@ -59,20 +59,11 @@ pipeline {
                 script {
                     withAWS(region:'us-east-1', credentials: 'aws-creds'){
                     sh '''
-                        cd 00-vpc/
+                        cd 10-sg/
                         terraform apply -auto-approve
 
                        '''
                     }
-                }
-            }
-        }
-                stage('Trigger Downstrwam-Job-SG') {
-            steps {
-                script {
-                    build job: '10-sg',
-                    wait: false //It does not need to wait for the completion of VPC
-                    propagate: false // when thereis failure in d/s it should not affect u/s
                 }
             }
         }
