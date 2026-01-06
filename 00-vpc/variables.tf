@@ -112,7 +112,8 @@ variable "nat_tags" {
 }
 variable "is_peering_required" {
   type    = bool
-  default = false
+  default = true #creating peering connection between vpc created and default
+  # default = false
 }
 
 #   -upgrade                Install the latest module and provider versions
