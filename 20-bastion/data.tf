@@ -6,7 +6,7 @@ data "aws_ami" "ami" {
 
   filter {
     name   = "name"
-    values = ["RHEL-9-DevOps-Practice"]
+    values = ["redhat-9-DevOps-Practice"]
   }
 
   filter {
